@@ -47,9 +47,9 @@ The system aims to enhance diagnostic accuracy, reduce the workload of clinician
 |----------------|-----------------------------------|
 | OS              | Ubuntu 22.04                      |
 | Language        | Python 3.10, HTML5, CSS3, JavaScript(ES6) |
-| Framework       | Pytorch, FastAPI, React     |
+| Framework       | PyTorch, FastAPI, React     |
 | Environment     | Jupyter Notebook / VSCode             |
-| RDBMS           | Redis                               |
+| Database        | Redis                               |
 | Hardware        | NVIDIA RTX 4090                      |
 
 
@@ -58,7 +58,7 @@ The system aims to enhance diagnostic accuracy, reduce the workload of clinician
 
 ```bash
 .           
-├── Vision/                # Initial LSTM-based model
+├── Vision/               
 │   ├── Origin_UNet.py              # Model Training
 │   ├── XRaySegModules.py           # Image Segmentation Modules 
 │   └── [...]                
@@ -71,7 +71,7 @@ The system aims to enhance diagnostic accuracy, reduce the workload of clinician
 │   └── [...]          
 ├── frontend/
 │   ├── src/
-│   │   ├── Component/              # Web Compoenents
+│   │   ├── Component/              # Web Components
 │   │   ├── Data/                   # Web Images
 │   │   └── App.js                  # Frontend Main File
 │   └── [...]  
@@ -85,7 +85,7 @@ The system aims to enhance diagnostic accuracy, reduce the workload of clinician
 - Apply quantization to the hari-q3 model to optimize it for the available server resources.  
 - If high-quality and sufficient datasets are available, consider fine-tuning the model to further enhance diagnostic accuracy.  
 - Evaluate the current vLLM implementation within LangChain for production readiness, and if necessary, deploy a separate vLLM server for robust serving in real-world environments.  
-- Deploy the system on a AWS to enable scalable and reliable service operation.
+- Deploy the system on AWS to enable scalable and reliable service operation.
 
 <br><br>
 ## 📚 References
