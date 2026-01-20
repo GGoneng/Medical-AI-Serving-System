@@ -141,7 +141,7 @@ class _OriginUNet(nn.Module):
 # Internal Functions (do not call externally)
 # ----------------------------------------------------------
 
-def _image_preprocess(img: np.array, device: DeviceType ="cpu") -> torch.Tensor:
+def _image_preprocess(img: np.ndarray, device: DeviceType="cpu") -> torch.Tensor:
     img = cv.cvtColor(img, cv.COLOR_RGB2GRAY)
     
     transform = A.Compose([A.Resize(512, 512),
@@ -154,7 +154,7 @@ def _image_preprocess(img: np.array, device: DeviceType ="cpu") -> torch.Tensor:
 
     return img_tensor
 
-def _model_infer(img: np.array, num_classes: int, 
+def _model_infer(img: np.ndarray, num_classes: int, 
                  weights: str, device: DeviceType="cpu") -> torch.Tensor:
     img_tensor = _image_preprocess(img, device)
 

@@ -30,19 +30,21 @@ from functools import reduce
 from XRaySegModules import *
 
 # 데이터 경로 설정
-TRAIN_DATA_DIR = "../Pediatric_Abdominal_X-ray/Training/Source_Data"
-TRAIN_LABEL_DIR = "../Pediatric_Abdominal_X-ray/Training/Labeling_Data"
+TRAIN_DATA_DIR = "F:/Stomach_X-ray/Pediatric_Abdominal_X-ray/Train/Source_Data"
+TRAIN_LABEL_DIR = "F:/Stomach_X-ray/Pediatric_Abdominal_X-ray/Train/Labeling_Data"
 
-VAL_DATA_DIR = "../Pediatric_Abdominal_X-ray/Validation/Source_Data"
-VAL_LABEL_DIR = "../Pediatric_Abdominal_X-ray/Validation/Labeling_Data"
+VAL_DATA_DIR = "F:/Stomach_X-ray/Pediatric_Abdominal_X-ray/Validate/Source_Data"
+VAL_LABEL_DIR = "F:/Stomach_X-ray/Pediatric_Abdominal_X-ray/Validate/Labeling_Data"
 
+TEST_DATA_DIR = "F:/Stomach_X-ray/Pediatric_Abdominal_X-ray/Test/Source_Data"
+TEST_LABEL_DIR = "F:/Stomach_X-ray/Pediatric_Abdominal_X-ray/Test/Labeling_Data"
 
 # Training 데이터 준비
 folder_list = []
 label_file_list = []
 label_list = []
 
-for folder in os.listdir(TRAIN_LABEL_DIR)[:5]:
+for folder in os.listdir(TRAIN_LABEL_DIR):
     folder_list.append(os.path.join(TRAIN_LABEL_DIR, folder))
 
 for dir in folder_list:
@@ -58,7 +60,7 @@ val_folder_list = []
 val_label_file_list = []
 val_label_list = []
 
-for folder in os.listdir(VAL_LABEL_DIR)[:5]:
+for folder in os.listdir(VAL_LABEL_DIR):
     val_folder_list.append(os.path.join(VAL_LABEL_DIR, folder))
 
 for dir in val_folder_list:
@@ -69,19 +71,34 @@ for file in val_label_file_list:
     with open(file, "r", encoding="utf-8") as f:
         val_label_list.append(json.load(f))
 
+# Test 데이터 준비
+test_folder_list = []
+test_label_file_list = []
+test_label_list = []
+
+for folder in os.listdir(TEST_LABEL_DIR):
+    test_folder_list.append(os.path.join(TEST_LABEL_DIR, folder))
+
+for dir in test_folder_list:
+    for file_name in os.listdir(dir):
+        test_label_file_list.append(os.path.join(dir, file_name))
+
+for file in test_label_file_list:
+    with open(file, "r", encoding="utf-8") as f:
+        test_label_list.append(json.load(f))
+
+
 replace_dict = {"Labeling_Data": "Source_Data", ".json": ".png"}
 
 train_file_list = [reduce(lambda x, y: x.replace(*y), replace_dict.items(), file) for file in label_file_list]
 val_file_list = [reduce(lambda x, y: x.replace(*y), replace_dict.items(), file) for file in val_label_file_list]
-
+test_file_list = [reduce(lambda x, y: x.replace(*y), replace_dict.items(), file) for file in test_label_file_list]
 
 transform = A.Compose([ 
-    A.ShiftScaleRotate(shift_limit=0.0625, scale_limit=0, rotate_limit=5, p=0.5), 
-    A.RandomBrightnessContrast(brightness_limit=0.2, p=0.5), 
-    A.ElasticTransform(alpha=1, sigma=50, p=0.5),
+    A.ShiftScaleRotate(shift_limit=0.01, scale_limit=0, rotate_limit=2, p=0.5), 
+    A.RandomBrightnessContrast(brightness_limit=0.05, contrast_limit=0.05, p=0.5), 
     A.pytorch.ToTensorV2()
     ])
-
 
 BATCH_SIZE = 8
 

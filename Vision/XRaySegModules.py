@@ -2,25 +2,34 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from torch.utils.data import Dataset
+import torch.optim as optim
+import torch.optim.lr_scheduler as lr_scheduler
+
+from torch.utils.data import Dataset, DataLoader
 
 from PIL import Image, ImageDraw
 
 import os
 import numpy as np
 
+import albumentations as A
 
+from typing import List, Optional, Tuple, Literal
 
 class XRayDataset(Dataset):
-    def __init__(self, img_path: , json_list, transform=None):
+    img_path: List[str]
+    json_list: List[str]
+    transform: Optional[A.Compose]
+
+    def __init__(self, img_path: List[str], json_list: List[str], transform: Optional[A.Compose]=None) -> None:
         self.img_path = img_path
         self.label = json_list
         self.transform = transform
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.img_path)
     
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
         img_path = self.img_path[idx]
         item = self.label[idx]
 
@@ -46,8 +55,10 @@ class XRayDataset(Dataset):
 
 
 
-class Conv(nn.Module):
-    def __init__(self, in_ch, out_ch):
+class _Conv(nn.Module):
+    conv: nn.Sequential
+
+    def __init__(self, in_ch: int, out_ch: int) -> None:
         super().__init__()
         self.conv = nn.Sequential(
             nn.Conv2d(in_ch, out_ch, 3, padding=1),
@@ -58,20 +69,23 @@ class Conv(nn.Module):
             nn.ReLU()
         )
     
-    def forward(self, input):
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
         return self.conv(input)
     
-class Expand(nn.Module):
-    def __init__(self, in_ch, out_ch):
+class _Expand(nn.Module):
+    up: nn.Sequential
+    conv: _Conv
+
+    def __init__(self, in_ch: int, out_ch: int) -> None:
         super().__init__()
         self.up = nn.Sequential(
             nn.ConvTranspose2d(in_ch, out_ch, 2, stride=2),
             nn.BatchNorm2d(out_ch),
             nn.ReLU()
         )
-        self.conv = Conv(in_ch, out_ch)
+        self.conv = _Conv(in_ch, out_ch)
 
-    def forward(self, input, skip):
+    def forward(self, input: torch.Tensor, skip: torch.Tensor) -> torch.Tensor:
         x = self.up(input)
         x = torch.cat((x, skip), dim=1)
         x = self.conv(x)
@@ -79,28 +93,44 @@ class Expand(nn.Module):
         return x
 
 class OriginUNet(nn.Module):
-    def __init__(self, num_classes):
+    encoder1: _Conv
+    encoder2: _Conv
+    encoder3: _Conv
+    encoder4: _Conv
+
+    maxpool: nn.MaxPool2d
+    bottleneck: _Conv
+
+    decoder1: _Expand
+    decoder2: _Expand
+    decoder3: _Expand
+    decoder4: _Expand
+
+    output: nn.Conv2d
+    dropout: nn.Dropout2d
+
+    def __init__(self, num_classes: int) -> None:
         super().__init__()
         
-        self.encoder1 = Conv(1, 64)
-        self.encoder2 = Conv(64, 128)
-        self.encoder3 = Conv(128, 256)
-        self.encoder4 = Conv(256, 512)
+        self.encoder1 = _Conv(1, 64)
+        self.encoder2 = _Conv(64, 128)
+        self.encoder3 = _Conv(128, 256)
+        self.encoder4 = _Conv(256, 512)
 
         self.maxpool = nn.MaxPool2d(2)
 
-        self.bottleneck = Conv(512, 1024)
+        self.bottleneck = _Conv(512, 1024)
 
-        self.decoder1 = Expand(1024, 512)
-        self.decoder2 = Expand(512, 256)
-        self.decoder3 = Expand(256, 128)
-        self.decoder4 = Expand(128, 64)
+        self.decoder1 = _Expand(1024, 512)
+        self.decoder2 = _Expand(512, 256)
+        self.decoder3 = _Expand(256, 128)
+        self.decoder4 = _Expand(128, 64)
 
         self.output = nn.Conv2d(64, num_classes, 1)
 
         self.dropout = nn.Dropout2d(0.2)
 
-    def forward(self, input):
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
         in1 = self.encoder1(input)
         in2 = self.encoder2(self.maxpool(in1))
         in3 = self.encoder3(self.maxpool(in2))
@@ -118,7 +148,7 @@ class OriginUNet(nn.Module):
         return final_output
 
 
-def dice_coefficient(pred, target, smooth=1):
+def _dice_coefficient(pred: torch.Tensor, target: torch.Tensor, smooth: int=1) -> torch.Tensor:
     num_classes = pred.shape[1]
     pred = F.softmax(pred, dim=1) 
     
@@ -136,35 +166,41 @@ def dice_coefficient(pred, target, smooth=1):
     return torch.mean(torch.stack(dice_scores)).item()
 
 
-def multiclass_dice_loss(pred, target):
+def _multiclass_dice_loss(pred: torch.Tensor, target: torch.Tensor) -> float:
     num_classes = pred.shape[1]
 
-    dice_coef = dice_coefficient(pred, target)
+    dice_coef = _dice_coefficient(pred, target)
 
     return 1 - dice_coef / num_classes 
 
 
 
 class CustomWeightedLoss(nn.Module):
-    def __init__(self, device):
+    device: Literal["cpu", "cuda"]
+    class_weights: torch.Tensor
+    CELoss: nn.CrossEntropyLoss
+
+    def __init__(self, device: Literal["cpu", "cuda"]="cpu") -> None:
         super().__init__()
         self.device = device
         self.class_weights = torch.tensor([0.1, 1.0, 1.0, 1.0, 1.0], dtype=torch.float32, device=self.device)
         self.CELoss = nn.CrossEntropyLoss(weight=self.class_weights)
 
-    def forward(self, pred, target):
+    def forward(self, pred: torch.Tensor, target: torch.Tensor) -> float:
         ce_loss = self.CELoss(pred, target)
 
         target_onehot = F.one_hot(target, num_classes=pred.shape[1])  # [B, H, W, C]
         target_onehot = target_onehot.permute(0, 3, 1, 2).float()  # [B, C, H, W]
 
-        dice_loss = multiclass_dice_loss(pred, target_onehot)
+        dice_loss = _multiclass_dice_loss(pred, target_onehot)
 
         return ce_loss + 2 * dice_loss
     
 
 # 모델 Test 함수
-def testing(model, valDL, data_size, loss_fn, device):
+def testing(model: OriginUNet, valDL: DataLoader, 
+            data_size: int, loss_fn: CustomWeightedLoss, 
+            device: Literal["cpu", "cuda"]="cpu") -> Tuple[List, List]:
     # Dropout, BatchNorm 등 가중치 규제 비활성화
     model.eval()
 
@@ -182,7 +218,7 @@ def testing(model, valDL, data_size, loss_fn, device):
             loss = loss_fn(pre_val, targetTS).to(device)
 
             # DICE Score 확인 (클래스 객체와 예측값의 면적 비교)
-            score = dice_coefficient(pre_val, targetTS)
+            score = _dice_coefficient(pre_val, targetTS)
 
             loss_total += loss.item() * batch_size
             score_total += score * batch_size
@@ -193,9 +229,11 @@ def testing(model, valDL, data_size, loss_fn, device):
     return avg_loss, avg_score
 
 
-def training(model, trainDL, valDL, optimizer, epoch, 
-             data_size, val_data_size, loss_fn,
-             scheduler, device):
+def training(model: OriginUNet, trainDL: DataLoader, valDL: DataLoader, 
+             optimizer: optim.AdamW, epoch: int, 
+             data_size: int, val_data_size: int, loss_fn: CustomWeightedLoss,
+             scheduler: lr_scheduler.ReduceLROnPlateau, 
+             device: Literal["cpu", "cuda"]="cpu") -> Tuple[List, List]:
     # 가중치 파일 저장 위치 정의
     SAVE_PATH = './saved_models'
     os.makedirs(SAVE_PATH, exist_ok=True)
@@ -229,7 +267,7 @@ def training(model, trainDL, valDL, optimizer, epoch,
             loss = loss_fn(pre_val, targetTS).to(device)
 
             # DICE Score 확인 (클래스 객체와 예측값의 면적 비교)
-            score = dice_coefficient(pre_val, targetTS)
+            score = _dice_coefficient(pre_val, targetTS)
 
             loss_total += loss.item() * batch_size
             score_total += score * batch_size
