@@ -105,11 +105,14 @@ BATCH_SIZE = 8
 trainDS = XRayDataset(train_file_list, label_list, transform)
 trainDL = DataLoader(trainDS, batch_size=BATCH_SIZE, shuffle=True)
 
-valDS = XRayDataset(val_file_list, val_label_list, transform)
+valDS = XRayDataset(val_file_list, val_label_list)
 valDL = DataLoader(valDS, batch_size=BATCH_SIZE)
 
+testDS = XRayDataset(test_file_list, test_label_list)
+testDL = DataLoader(testDS, batch_size=BATCH_SIZE)
 
-EPOCH = 300 
+
+EPOCH = 300
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 LR = 1e-4
 

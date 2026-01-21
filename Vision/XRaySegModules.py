@@ -48,8 +48,12 @@ class XRayDataset(Dataset):
 
         if self.transform:
             augment = self.transform(image=img, mask=mask)
-            img = augment["image"]
-            mask = augment["mask"].long()
+        else:
+            augment = A.pytorch.ToTensorV2()(image=img, mask=mask)
+        
+        img = augment["image"]
+        mask = augment["mask"].long()
+        
 
         return img, mask
 
