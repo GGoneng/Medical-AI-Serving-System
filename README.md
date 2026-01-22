@@ -91,4 +91,5 @@ The system aims to enhance diagnostic accuracy, reduce the workload of clinician
 ## 📚 References
 1. Seoul National University Hospital. snuh/hari-q3-14b: Korean Medical Language Model.
 2. Olaf Ronneberger, Philiop Fischer, & Thomas Brox. (2015). U-Net: Convolutional Networks for Biomedical Image Segmentation. In Lecture Notes in Computer Science (including subseries Lecture Notes in Artificial Intelligence and Lecture Notes in Bioinformatics) (Vol. 9351, Issue Cvd, pp. 234-241).
-3. Michael Yeung, Evis Sala, Carola-Bibiane Schönlieb, & Leonardo Rundo. (2022). Unified Focal loss: Generalising Dice and cross entropy-based losses to handle class imbalanced medical image segmentation. In Computerized Medical Imaging and Graphics (Vol. 95, Article 102026)
+3. Michael Yeung, Evis Sala, Carola-Bibiane Schönlieb, & Leonardo Rundo. (2022). Unified Focal loss: Generalising Dice and cross entropy-based losses to handle class imbalanced medical image segmentation. (including Computerized Medical Imaging and Graphics) (Vol. 95, Article 102026)
+4. Remah Younisse, Rawan Ghnemat, & Jaafer Al Saraireh. (2023). Fine-tuning U-net for medical image segmentation based on activation function, optimizer and pooling layer (including International Journal of Electrical and Computer Engineering (IJECE)) (Vol. 13, No. 5, pp. 5406-5417)
