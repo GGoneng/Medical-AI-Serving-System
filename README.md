@@ -2,6 +2,7 @@
 
 > ### **End-to-End Medical AI Inference and Web Serving**
 
+<img width="508" height="508" alt="image (1)" src="https://github.com/user-attachments/assets/2da11290-bdbf-4023-bc2e-c8e2d160da90" />
 
 
 <br><br>
