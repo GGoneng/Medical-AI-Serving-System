@@ -18,6 +18,8 @@ from typing import List, Optional, Tuple, Literal
 
 import random
 
+import yaml
+
 # 실험 조건 고정 함수
 def set_seed(seed: int=7) -> None:
     random.seed(seed)
@@ -370,3 +372,10 @@ def testing(model: SegmentationUNet, weights: str,
     final_score = (score_total / len(testDL)).mean()
 
     return final_score
+
+
+def load_config(config_file):
+    with open(config_file, "r", encoding="utf-8") as file:
+        config = yaml.safe_load(file)
+
+    return config

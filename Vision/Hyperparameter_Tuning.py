@@ -65,23 +65,23 @@ from XRaySegModules import *
 set_seed(1)
 
 # 데이터 경로 설정
-TRAIN_DATA_DIR = "F:/Stomach_X-ray/Pediatric_Abdominal_X-ray/Train/Source_Data"
-TRAIN_LABEL_DIR = "F:/Stomach_X-ray/Pediatric_Abdominal_X-ray/Train/Labeling_Data"
+TRAIN_DATA_PATH = "F:/Stomach_X-ray/Pediatric_Abdominal_X-ray/Train/Source_Data"
+TRAIN_LABEL_PATH = "F:/Stomach_X-ray/Pediatric_Abdominal_X-ray/Train/Labeling_Data"
 
-VAL_DATA_DIR = "F:/Stomach_X-ray/Pediatric_Abdominal_X-ray/Validate/Source_Data"
-VAL_LABEL_DIR = "F:/Stomach_X-ray/Pediatric_Abdominal_X-ray/Validate/Labeling_Data"
+VAL_DATA_PATH = "F:/Stomach_X-ray/Pediatric_Abdominal_X-ray/Validate/Source_Data"
+VAL_LABEL_PATH = "F:/Stomach_X-ray/Pediatric_Abdominal_X-ray/Validate/Labeling_Data"
 
 # Training 데이터 준비
 folder_list = []
 label_file_list = []
 label_list = []
 
-for folder in os.listdir(TRAIN_LABEL_DIR):
-    folder_list.append(os.path.join(TRAIN_LABEL_DIR, folder))
+for folder in os.listdir(TRAIN_LABEL_PATH):
+    folder_list.append(os.path.join(TRAIN_LABEL_PATH, folder))
 
-for dir in folder_list:
-    for file_name in os.listdir(dir):
-        label_file_list.append(os.path.join(dir, file_name))
+for path in folder_list:
+    for file_name in os.listdir(path):
+        label_file_list.append(os.path.join(path, file_name))
 
 for file in label_file_list:
     with open(file, "r", encoding="utf-8") as f:
@@ -92,12 +92,12 @@ val_folder_list = []
 val_label_file_list = []
 val_label_list = []
 
-for folder in os.listdir(VAL_LABEL_DIR):
-    val_folder_list.append(os.path.join(VAL_LABEL_DIR, folder))
+for folder in os.listdir(VAL_LABEL_PATH):
+    val_folder_list.append(os.path.join(VAL_LABEL_PATH, folder))
 
-for dir in val_folder_list:
-    for file_name in os.listdir(dir):
-        val_label_file_list.append(os.path.join(dir, file_name))
+for path in val_folder_list:
+    for file_name in os.listdir(path):
+        val_label_file_list.append(os.path.join(path, file_name))
 
 for file in val_label_file_list:
     with open(file, "r", encoding="utf-8") as f:
