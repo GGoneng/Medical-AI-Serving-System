@@ -6,7 +6,7 @@
 # -----------------------------------------------------------------------------------
 # >> 주요 기능
 # - 정상 1, 비정상 4가지의 상황을 Image Segmentation을 통해 구별
-# - Computer Vision 분야의 U-Net 구조를 직접 구현 
+# - Computer Vision 분야의 U-Net 구조를 직접 커스텀하여 구현 
 #
 # >> 성능
 # Train Multi-Class Dice Score : 0.898 -> 0.908

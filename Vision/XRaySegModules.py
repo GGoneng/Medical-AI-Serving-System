@@ -345,3 +345,28 @@ def training(model: SegmentationUNet, trainDL: DataLoader, valDL: DataLoader,
     print(f"최종 VAL SCORE : {SCORE_HISTORY[1][best_idx]}")
 
     return LOSS_HISTORY, SCORE_HISTORY
+
+def testing(model: SegmentationUNet, weights: str, 
+            testDL: DataLoader, device: Literal["cpu", "cuda"]="cpu"):
+
+    model.load_state_dict(torch.load(weights, map_location=torch.device(device), weights_only=True))
+    model.eval()
+
+    score_total = None
+    
+    with torch.no_grad():
+        for featureTS, targetTS in testDL:
+            featureTS, targetTS = featureTS.to(device), targetTS.to(device)
+
+            pre_val = model(featureTS)
+
+            score = _dice_coefficient(pre_val, targetTS)
+
+            if score_total is None:
+                score_total = score
+            else:
+                score_total += score
+    
+    final_score = (score_total / len(testDL)).mean()
+
+    return final_score
