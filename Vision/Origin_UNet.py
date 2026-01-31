@@ -9,8 +9,8 @@
 # - Computer Vision 분야의 U-Net 구조를 직접 커스텀하여 구현 
 #
 # >> 성능
-# Train Multi-Class Dice Score : 0.898 -> 0.908
-# Test Multi-Class Dice Score : 0.883 -> 0.912
+# Train Multi-Class Dice Score : 0.898 -> 0.908 
+# Test Multi-Class Dice Score : 0.883 -> 0.912 -> 0.945
 # -----------------------------------------------------------------------------------
 
 
@@ -147,7 +147,14 @@ test_file_list = [reduce(lambda x, y: x.replace(*y), replace_dict.items(), file)
 IMG_SIZE = config["parameters"]["size"]
 
 transform = A.Compose([
-    A.Resize(IMG_SIZE, IMG_SIZE),
+    A.Resize(320, 320), 
+    A.ShiftScaleRotate(shift_limit=0.005, scale_limit=0, rotate_limit=1, p=0.5), 
+    A.RandomBrightnessContrast(brightness_limit=0.03, contrast_limit=0.03, p=0.5), 
+    A.pytorch.ToTensorV2()
+])
+
+val_test_transform = A.Compose([
+    A.Resize(320, 320),
     A.pytorch.ToTensorV2()
 ])
 
@@ -156,10 +163,10 @@ BATCH_SIZE = config["parameters"]["batch_size"]
 trainDS = XRayDataset(train_file_list, label_list, transform)
 trainDL = DataLoader(trainDS, batch_size=BATCH_SIZE, shuffle=True)
 
-valDS = XRayDataset(val_file_list, val_label_list, transform)
+valDS = XRayDataset(val_file_list, val_label_list, val_test_transform)
 valDL = DataLoader(valDS, batch_size=BATCH_SIZE)
 
-testDS = XRayDataset(test_file_list, test_label_list, transform)
+testDS = XRayDataset(test_file_list, test_label_list, val_test_transform)
 testDL = DataLoader(testDS, batch_size=BATCH_SIZE)
 
 SEED = config["parameters"]["seed"]

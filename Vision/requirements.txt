@@ -7,4 +7,5 @@ torchinfo==1.8.0
 torchmetrics==1.8.1
 sympy==1.13.3
 gdown==5.2.0
+pyyaml==6.0.2
 albumentations
