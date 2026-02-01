@@ -10,7 +10,7 @@
 #
 # >> 성능
 # Train Multi-Class Dice Score : 0.898 -> 0.908 
-# Test Multi-Class Dice Score : 0.883 -> 0.912 -> 0.945
+# Test Multi-Class Dice Score : 0.883 -> 0.912 -> 0.9487
 # -----------------------------------------------------------------------------------
 
 
@@ -147,14 +147,14 @@ test_file_list = [reduce(lambda x, y: x.replace(*y), replace_dict.items(), file)
 IMG_SIZE = config["parameters"]["size"]
 
 transform = A.Compose([
-    A.Resize(320, 320), 
+    A.Resize(IMG_SIZE, IMG_SIZE), 
     A.ShiftScaleRotate(shift_limit=0.005, scale_limit=0, rotate_limit=1, p=0.5), 
     A.RandomBrightnessContrast(brightness_limit=0.03, contrast_limit=0.03, p=0.5), 
     A.pytorch.ToTensorV2()
 ])
 
 val_test_transform = A.Compose([
-    A.Resize(320, 320),
+    A.Resize(IMG_SIZE, IMG_SIZE),
     A.pytorch.ToTensorV2()
 ])
 
