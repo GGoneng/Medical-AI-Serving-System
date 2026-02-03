@@ -47,11 +47,11 @@ class _Conv(nn.Module):
         super().__init__()
         self.conv = nn.Sequential(
             nn.Conv2d(in_ch, out_ch, 3, padding=1),
-            nn.BatchNorm2d(out_ch),
-            nn.ReLU(),
+            nn.GroupNorm(max(1, out_ch // 8), out_ch),
+            nn.LeakyReLU(0.01),
             nn.Conv2d(out_ch, out_ch, 3, padding=1),
-            nn.BatchNorm2d(out_ch),
-            nn.ReLU()
+            nn.GroupNorm(max(1, out_ch // 8), out_ch),
+            nn.LeakyReLU(0.01)
         )
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
@@ -65,8 +65,7 @@ class _Expand(nn.Module):
         super().__init__()
         self.up = nn.Sequential(
             nn.ConvTranspose2d(in_ch, out_ch, 2, stride=2),
-            nn.BatchNorm2d(out_ch),
-            nn.ReLU()
+            nn.LeakyReLU(0.01)
         )
         self.conv = _Conv(in_ch, out_ch)
 
@@ -77,7 +76,7 @@ class _Expand(nn.Module):
 
         return x
 
-class _OriginUNet(nn.Module):
+class SegmentationUNet(nn.Module):
     encoder1: _Conv
     encoder2: _Conv
     encoder3: _Conv
@@ -144,7 +143,7 @@ class _OriginUNet(nn.Module):
 def _image_preprocess(img: np.ndarray, device: DeviceType="cpu") -> torch.Tensor:
     img = cv.cvtColor(img, cv.COLOR_RGB2GRAY)
     
-    transform = A.Compose([A.Resize(512, 512),
+    transform = A.Compose([A.Resize(224, 224),
                            A.pytorch.ToTensorV2()])
     
     img = np.array(img, dtype=np.float32) / 255.0
@@ -158,7 +157,7 @@ def _model_infer(img: np.ndarray, num_classes: int,
                  weights: str, device: DeviceType="cpu") -> torch.Tensor:
     img_tensor = _image_preprocess(img, device)
 
-    model = _OriginUNet(num_classes=num_classes).to(device)
+    model = SegmentationUNet(num_classes=num_classes).to(device)
     model.load_state_dict(torch.load(weights, map_location=torch.device(device), weights_only=True))
 
     model.eval()
