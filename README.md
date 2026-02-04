@@ -22,7 +22,7 @@ The system aims to enhance diagnostic accuracy, reduce the workload of clinician
 ## 🤖 Model Training
 - ### **Vision**
   - **Pediatric Abdominal X-ray Diagnosis**
-    - Based on the U-Net original paper, I trained a model with BatchNorm and Padding added for training stability and segmentation performance.
+    - Based on the U-Net original paper, I trained a model with GroupNorm and Padding added for training stability and segmentation performance.
     - The model was trained using a custom loss function that combines two components:  
       1. **Multi-class Dice Loss** – to evaluate how accurately the model identifies affected regions.  
       2. **Weighted Cross-Entropy Loss** – to ensure proper class discrimination, with higher weight applied to the underrepresented classes since the 'Normal' class dominates the dataset.        
