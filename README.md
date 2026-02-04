@@ -28,10 +28,10 @@ The system aims to enhance diagnostic accuracy, reduce the workload of clinician
       2. **Weighted Cross-Entropy Loss** – to ensure proper class discrimination, with higher weight applied to the underrepresented classes since the 'Normal' class dominates the dataset.        
       
       By combining these, the custom loss balances both segmentation accuracy and class-wise classification performance.
-    - Optimizer: AdamW, Learning Rate: 1e-4 (with ReduceLROnPlateau scheduler)
-    - Epochs: 300 (with early stopping)
-    - **Train Multi-Class Dice Score:** 0.898 → 0.908  
-    - **Test Multi-Class Dice Score:** 0.883 → 0.912
+    - Optimizer: RMSprop, Learning Rate: 1e-4 (with ReduceLROnPlateau scheduler)
+    - Epochs: 100 (with early stopping)
+    - **Train Multi-Class Dice Score:** 0.898 → 0.9182
+    - **Test Multi-Class Dice Score:** 0.883 → 0.9487
     - Future improvements will focus on code refactoring and incorporating insights from recent research papers to further enhance training accuracy and model performance.
 
 <br><br>
