@@ -22,16 +22,17 @@ The system aims to enhance diagnostic accuracy, reduce the workload of clinician
 ## 🤖 Model Training
 - ### **Vision**
   - **Pediatric Abdominal X-ray Diagnosis**
-    - Based on the U-Net original paper, I trained a model with BatchNorm and Padding added for training stability and segmentation performance.
+    - Based on the U-Net original paper, I trained a model with GroupNorm and Padding added for training stability and segmentation performance.
     - The model was trained using a custom loss function that combines two components:  
       1. **Multi-class Dice Loss** – to evaluate how accurately the model identifies affected regions.  
       2. **Weighted Cross-Entropy Loss** – to ensure proper class discrimination, with higher weight applied to the underrepresented classes since the 'Normal' class dominates the dataset.        
       
       By combining these, the custom loss balances both segmentation accuracy and class-wise classification performance.
-    - Optimizer: AdamW, Learning Rate: 1e-4 (with ReduceLROnPlateau scheduler)
-    - Epochs: 300 (with early stopping)
-    - **Train Multi-Class Dice Score:** 0.898 → 0.908  
-    - **Test Multi-Class Dice Score:** 0.883 → 0.912
+    - Optimizer: RMSprop, Learning Rate: 1e-4 (with ReduceLROnPlateau scheduler)
+    - Epochs: 100 (with early stopping)
+    - Test Dataset: 1,000 Pediatric Abdominal X-ray Composite Images (200 Images per Class)
+    - **Train Multi-Class Dice Score:** 0.898 → 0.9182
+    - **Test Multi-Class Dice Score:** 0.883 → 0.9487
     - Future improvements will focus on code refactoring and incorporating insights from recent research papers to further enhance training accuracy and model performance.
 
 <br><br>
