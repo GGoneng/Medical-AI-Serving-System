@@ -9,7 +9,7 @@
 # - Computer Vision 분야의 U-Net 구조를 직접 커스텀하여 구현 
 #
 # >> 성능
-# Train Multi-Class Dice Score : 0.898 -> 0.908 
+# Train Multi-Class Dice Score : 0.898 -> 0.908 -> 0.9182
 # Test Multi-Class Dice Score : 0.883 -> 0.912 -> 0.9487
 # -----------------------------------------------------------------------------------
 
