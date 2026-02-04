@@ -30,7 +30,7 @@ The system aims to enhance diagnostic accuracy, reduce the workload of clinician
       By combining these, the custom loss balances both segmentation accuracy and class-wise classification performance.
     - Optimizer: RMSprop, Learning Rate: 1e-4 (with ReduceLROnPlateau scheduler)
     - Epochs: 100 (with early stopping)
-    - Test Dataset: 1,000 Pediatric Abdominal X-ray Composite Images
+    - Test Dataset: 1,000 Pediatric Abdominal X-ray Composite Images (200 Images per Class)
     - **Train Multi-Class Dice Score:** 0.898 → 0.9182
     - **Test Multi-Class Dice Score:** 0.883 → 0.9487
     - Future improvements will focus on code refactoring and incorporating insights from recent research papers to further enhance training accuracy and model performance.
