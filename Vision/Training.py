@@ -17,8 +17,6 @@
 import os
 import json
 
-import torch
-import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler
 
 from torch.utils.data import DataLoader
@@ -138,6 +136,7 @@ for file in test_label_file_list:
             f"\nPath must be a string type."
         )
 
+# 데이터셋 mapping
 replace_dict = {"Labeling_Data": "Source_Data", ".json": ".png"}
 
 train_file_list = [reduce(lambda x, y: x.replace(*y), replace_dict.items(), file) for file in label_file_list]
@@ -146,6 +145,7 @@ test_file_list = [reduce(lambda x, y: x.replace(*y), replace_dict.items(), file)
 
 IMG_SIZE = config["parameters"]["size"]
 
+# 이미지 전처리
 transform = A.Compose([
     A.Resize(IMG_SIZE, IMG_SIZE), 
     A.ShiftScaleRotate(shift_limit=0.005, scale_limit=0, rotate_limit=1, p=0.5), 
@@ -169,6 +169,7 @@ valDL = DataLoader(valDS, batch_size=BATCH_SIZE)
 testDS = XRayDataset(test_file_list, test_label_list, val_test_transform)
 testDL = DataLoader(testDS, batch_size=BATCH_SIZE)
 
+# HyperParameter 설정
 SEED = config["parameters"]["seed"]
 EPOCH = config["parameters"]["epochs"]
 LR = config["parameters"]["learning_rate"]
@@ -190,8 +191,10 @@ loss_fn = CustomWeightedLoss(device=DEVICE)
 
 scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, mode="min", patience=SCHEDULER_PATIENCE)
 
+# Training
 loss, score, weights_path = training(model=model, trainDL=trainDL, valDL=valDL, optimizer=optimizer,
                        epoch=EPOCH, loss_fn=loss_fn, scheduler=scheduler,
                        patience=PATIENCE, threshold=THRESHOLD, device=DEVICE)
 
+# Testing
 test_score = testing(model=model, weights=weights_path, testDL=testDL, device=DEVICE)

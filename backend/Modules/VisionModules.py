@@ -76,6 +76,10 @@ class _Expand(nn.Module):
 
         return x
 
+# ----------------------------------------------------------
+# External Classes (can be called from outside)
+# ----------------------------------------------------------
+
 class SegmentationUNet(nn.Module):
     encoder1: _Conv
     encoder2: _Conv
@@ -130,11 +134,6 @@ class SegmentationUNet(nn.Module):
         final_output = self.output(out4)
 
         return final_output
-
-# ----------------------------------------------------------
-# External Classes (can be called from outside)
-# ----------------------------------------------------------
-
 
 # ----------------------------------------------------------
 # Internal Functions (do not call externally)

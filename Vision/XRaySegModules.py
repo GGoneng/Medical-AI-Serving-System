@@ -1,3 +1,7 @@
+# ----------------------------------------------------------
+# Modules
+# ----------------------------------------------------------
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -21,13 +25,58 @@ import random
 
 import yaml
 
-# 실험 조건 고정 함수
-def set_seed(seed: int=7) -> None:
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-    torch.backends.cudnn.deterministic = True
+# ----------------------------------------------------------
+# Internal Variables (do not call externally)
+# ----------------------------------------------------------
+
+# ----------------------------------------------------------
+# External Variables (can be called from outside)
+# ----------------------------------------------------------
+
+# ----------------------------------------------------------
+# Internal Classes (do not call externally)
+# ----------------------------------------------------------
+
+class _Conv(nn.Module):
+    conv: nn.Sequential
+
+    def __init__(self, in_ch: int, out_ch: int) -> None:
+        super().__init__()
+        self.conv = nn.Sequential(
+            nn.Conv2d(in_ch, out_ch, 3, padding=1),
+            nn.GroupNorm(max(1, out_ch // 8), out_ch),
+            nn.LeakyReLU(0.01),
+            nn.Conv2d(out_ch, out_ch, 3, padding=1),
+            nn.GroupNorm(max(1, out_ch // 8), out_ch),
+            nn.LeakyReLU(0.01)
+        )
+    
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        return self.conv(input)
+    
+    
+class _Expand(nn.Module):
+    up: nn.Sequential
+    conv: _Conv
+
+    def __init__(self, in_ch: int, out_ch: int) -> None:
+        super().__init__()
+        self.up = nn.Sequential(
+            nn.ConvTranspose2d(in_ch, out_ch, 2, stride=2),
+            nn.LeakyReLU(0.01)
+        )
+        self.conv = _Conv(in_ch, out_ch)
+
+    def forward(self, input: torch.Tensor, skip: torch.Tensor) -> torch.Tensor:
+        x = self.up(input)
+        x = torch.cat((x, skip), dim=1)
+        x = self.conv(x)
+
+        return x
+
+# ----------------------------------------------------------
+# External Classes (can be called from outside)
+# ----------------------------------------------------------
 
 class XRayDataset(Dataset):
     img_path: List[str]
@@ -69,44 +118,6 @@ class XRayDataset(Dataset):
         
 
         return img, mask
-
-
-
-class _Conv(nn.Module):
-    conv: nn.Sequential
-
-    def __init__(self, in_ch: int, out_ch: int) -> None:
-        super().__init__()
-        self.conv = nn.Sequential(
-            nn.Conv2d(in_ch, out_ch, 3, padding=1),
-            nn.GroupNorm(max(1, out_ch // 8), out_ch),
-            nn.LeakyReLU(0.01),
-            nn.Conv2d(out_ch, out_ch, 3, padding=1),
-            nn.GroupNorm(max(1, out_ch // 8), out_ch),
-            nn.LeakyReLU(0.01)
-        )
-    
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
-        return self.conv(input)
-    
-class _Expand(nn.Module):
-    up: nn.Sequential
-    conv: _Conv
-
-    def __init__(self, in_ch: int, out_ch: int) -> None:
-        super().__init__()
-        self.up = nn.Sequential(
-            nn.ConvTranspose2d(in_ch, out_ch, 2, stride=2),
-            nn.LeakyReLU(0.01)
-        )
-        self.conv = _Conv(in_ch, out_ch)
-
-    def forward(self, input: torch.Tensor, skip: torch.Tensor) -> torch.Tensor:
-        x = self.up(input)
-        x = torch.cat((x, skip), dim=1)
-        x = self.conv(x)
-
-        return x
 
 class SegmentationUNet(nn.Module):
     encoder1: _Conv
@@ -164,6 +175,28 @@ class SegmentationUNet(nn.Module):
         return final_output
 
 
+class CustomWeightedLoss(nn.Module):
+    device: DeviceType
+    class_weights: torch.Tensor
+    CELoss: nn.CrossEntropyLoss
+
+    def __init__(self, device: DeviceType="cpu") -> None:
+        super().__init__()
+        self.device = device
+        self.class_weights = torch.tensor([0.1, 1.0, 1.0, 1.0, 1.0], dtype=torch.float32, device=self.device)
+        self.CELoss = nn.CrossEntropyLoss(weight=self.class_weights)
+
+    def forward(self, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        ce_loss = self.CELoss(pred, target)
+
+        dice_loss = _multiclass_dice_loss(pred, target)
+
+        return ce_loss + 2 * dice_loss
+    
+# ----------------------------------------------------------
+# Internal Functions (do not call externally)
+# ----------------------------------------------------------
+
 def _dice_coefficient(pred: torch.Tensor, target: torch.Tensor, smooth: int=1) -> torch.Tensor:
     num_classes = pred.shape[1]
     pred = F.softmax(pred, dim=1) 
@@ -188,26 +221,18 @@ def _multiclass_dice_loss(pred: torch.Tensor, target: torch.Tensor) -> torch.Ten
 
     return 1 - dice_coef
 
+# ----------------------------------------------------------
+# External Functions (can be called from outside)
+# ----------------------------------------------------------
 
+# 실험 조건 고정 함수
+def set_seed(seed: int=7) -> None:
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
 
-class CustomWeightedLoss(nn.Module):
-    device: DeviceType
-    class_weights: torch.Tensor
-    CELoss: nn.CrossEntropyLoss
-
-    def __init__(self, device: DeviceType="cpu") -> None:
-        super().__init__()
-        self.device = device
-        self.class_weights = torch.tensor([0.1, 1.0, 1.0, 1.0, 1.0], dtype=torch.float32, device=self.device)
-        self.CELoss = nn.CrossEntropyLoss(weight=self.class_weights)
-
-    def forward(self, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        ce_loss = self.CELoss(pred, target)
-
-        dice_loss = _multiclass_dice_loss(pred, target)
-
-        return ce_loss + 2 * dice_loss
-    
 
 # 모델 Validate 함수
 def validating(model: nn.Module, valDL: DataLoader, 
@@ -242,6 +267,7 @@ def validating(model: nn.Module, valDL: DataLoader,
     avg_score = score_total / len(valDL)
 
     return avg_loss, avg_score
+
 
 # 모델 training 함수
 def training(model: nn.Module, trainDL: DataLoader, valDL: DataLoader, 
@@ -349,6 +375,8 @@ def training(model: nn.Module, trainDL: DataLoader, valDL: DataLoader,
 
     return LOSS_HISTORY, SCORE_HISTORY, SAVE_WEIGHTS
 
+
+# 모델 testing 함수
 def testing(model: nn.Module, weights: str, 
             testDL: DataLoader, device: DeviceType="cpu"):
 
@@ -383,7 +411,8 @@ def load_config(config_file: str) -> Dict[str, Any]:
         
         return config
     
-        
+
+# 모델 mapping       
 def load_model(model_name: str, num_classes: int,
                device: DeviceType="cpu") -> nn.Module:
     model_name = model_name.lower()
@@ -400,6 +429,7 @@ def load_model(model_name: str, num_classes: int,
     return model_dict[model_name](num_classes=num_classes).to(device)
 
 
+# Optimizer mapping
 def load_optimizer(optimizer_name: str, model: nn.Module, 
                    lr: float) -> optim.Optimizer:
     optimizer_name = optimizer_name.lower()
