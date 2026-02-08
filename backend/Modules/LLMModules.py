@@ -31,7 +31,7 @@ def load_model():
     tensor_parallel_size=1,
     vllm_kwargs={
         "gpu_memory_utilization": 0.7,
-        "quantization": "fp8"
+        "quantization": "awq"
         }
     )
 
