@@ -2,7 +2,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
 
 # Load tokenizer and model
-model_name = "snuh/hari-q3-14b"
+model_name = "snuh/hari-q3-8b"
 
 model = AutoModelForCausalLM.from_pretrained(
     model_name,

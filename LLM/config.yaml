@@ -1,0 +1,12 @@
+# Quantization Config
+
+model: snuh/hari-q3-8b
+save_path: ./Quantization_Model/hari-q3-8b-W4A16
+
+modifier_parameters:
+  ignore: 
+    - lm_head
+    - re:.*norm
+  scheme: W4A16
+  targets:
+    - Linear
