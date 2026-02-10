@@ -16,7 +16,7 @@ import asyncio
 # Internal Variables (do not call externally)
 # ----------------------------------------------------------
 
-_MODEL_NAME = "upstage/TinySolar-248m-4k"
+_MODEL_NAME = "snuh/hari-q3-14b"
 
 
 _llm = None
@@ -31,7 +31,7 @@ def load_model():
     tensor_parallel_size=1,
     vllm_kwargs={
         "gpu_memory_utilization": 0.7,
-        "quantization": "awq"
+        "quantization": "fp8"
         }
     )
 
