@@ -1,12 +1,38 @@
 # Quantization Config
 
-model: snuh/hari-q3-8b
-save_path: ./Quantization_Model/hari-q3-8b-W4A16
+seed: 7
+
+model:
+  model_name: snuh/hari-q3-8b
+  save_path: ./Quantization_Model/hari-q3-8b-awq
+
+dataset:
+  dataset_path: snuh/ClinicalQA
+  num_calibration_samples: 256
+  max_sequence_length: 4096
+
 
 modifier_parameters:
   ignore: 
+    - re:.*embed_tokens
+    - re:.*input_layernorm$
+    - re:.*mlp[.]gate$
+    - re:.*post_attention_layernorm$
+    - re:.*norm$
+    - re:model[.]visual.*
+    - re:visual.*
     - lm_head
-    - re:.*norm
-  scheme: W4A16
-  targets:
-    - Linear
+  duo_scaling: True
+  config_groups:
+    group_0:
+      targets:
+        - Linear
+      weights:
+        num_bits: 4
+        type: int
+        symmetric: True
+        group_size: 32
+        strategy: group
+        dynamic: False
+        actorder: None
+        observer: mse
