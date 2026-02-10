@@ -19,20 +19,22 @@ modifier_parameters:
     - re:.*mlp[.]gate$
     - re:.*post_attention_layernorm$
     - re:.*norm$
-    - re:model[.]visual.*
-    - re:visual.*
     - lm_head
-  duo_scaling: True
-  config_groups:
-    group_0:
-      targets:
-        - Linear
-      weights:
-        num_bits: 4
-        type: int
-        symmetric: True
-        group_size: 32
-        strategy: group
-        dynamic: False
-        actorder: None
-        observer: mse
+  scheme: W4A16
+  targets:
+    - Linear
+    
+  # duo_scaling: True
+  # config_groups:
+  #   group_0:
+  #     targets:
+  #       - Linear
+  #     weights:
+  #       num_bits: 4
+  #       type: int
+  #       symmetric: True
+  #       group_size: 32
+  #       strategy: group
+  #       dynamic: False
+  #       actorder: None
+  #       observer: mse

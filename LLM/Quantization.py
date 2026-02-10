@@ -14,6 +14,7 @@ from datasets import load_dataset
 
 from llmcompressor import oneshot
 from llmcompressor.modifiers.awq import AWQModifier
+from llmcompressor.utils import dispatch_for_generation
 
 import os
 import yaml
@@ -35,17 +36,16 @@ NUM_CALIBRATION_SAMPLES = config["dataset"]["num_calibration_samples"]
 MAX_SEQUENCE_LENGTH = config["dataset"]["max_sequence_length"]
 
 IGNORE = config["modifier_parameters"]["ignore"]
-DUO_SCALING = config["modifier_parameters"]["duo_scaling"]
-
-CONFIG_GROUPS = config["modifier_parameters"]["config_groups"]
+SCHEME = config["modifier_parameters"]["scheme"]
+TARGETS = config["modifier_parameters"]["targets"]
 
 SEED = config["seed"]
 
 # Quantization Modifier 생성
 recipe = [
     AWQModifier(ignore=IGNORE, 
-                duo_scaling=DUO_SCALING,
-                config_groups=CONFIG_GROUPS)
+                scheme=SCHEME,
+                targets=TARGETS)
 ]
 
 # Model 불러오기
@@ -55,6 +55,23 @@ tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 # Dataset 불러오기
 data = load_dataset(DATASET_PATH, name=None, split=f"train[:{NUM_CALIBRATION_SAMPLES}]")
 data = data.shuffle(seed=SEED)
+
+preprocess = build_preprocess(tokenizer)
+
+data = data.map(preprocess)
+
+# Log 출력
+print(f"Quantizing model: {MODEL_NAME}\n")
+print(f"Ignore: {IGNORE}, \n\nScheme: {SCHEME}, \n\nTARGETS: {TARGETS}")
+
+# 양자화
+oneshot(
+    model=model,
+    dataset=data,
+    recipe=recipe,
+    max_seq_length=MAX_SEQUENCE_LENGTH,
+    num_calibration_samples=NUM_CALIBRATION_SAMPLES
+)
 
 prompt = '''
 ### Instruction:
@@ -69,15 +86,34 @@ prompt = '''
 가장 가능성이 높은 진단명은 무엇인가요?
 '''.strip()
 
-# Log 출력
-print(f"Quantizing model: {MODEL_NAME}")
-print(f"Ignore: {IGNORE}, Config: {CONFIG_GROUPS}")
+messages = [
+    {"role": "user", "content": prompt}
+]
 
-# 양자화
-oneshot(
-    model=model,
-    recipe=recipe
+text = tokenizer.apply_chat_template(
+    messages,
+    tokenize=False,
+    add_generation_prompt=True,
+    enable_thinking=True
 )
+
+# Confirm generations of the quantized model look sane.
+print("\n\n")
+print("========== SAMPLE GENERATION ==============")
+
+dispatch_for_generation(model)
+model_inputs = tokenizer([text], return_tensors="pt").to(model.device)
+
+generated_ids = model.generate(**model_inputs, max_new_tokens=4096)
+
+generated_ids = [
+    output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)
+]
+
+response = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
+print(response)
+
+print("==========================================\n\n")
 
 # Model, Tokenizer 저장
 model.save_pretrained(
