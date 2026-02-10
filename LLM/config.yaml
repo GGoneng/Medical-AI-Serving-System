@@ -17,7 +17,6 @@ modifier_parameters:
     - re:.*embed_tokens
     - re:.*mlp[.]gate$
     - re:.*post_attention_layernorm$
-    - re:.*norm$
     - lm_head
   scheme: W4A16
   targets:
