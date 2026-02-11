@@ -52,7 +52,7 @@ recipe = [
 model = AutoModelForCausalLM.from_pretrained(MODEL_NAME,
                                              dtype="auto",
                                              device_map="auto")
-tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)   
 
 # Dataset 불러오기
 data = load_dataset(DATASET_PATH, name=None, split=f"train[:{NUM_CALIBRATION_SAMPLES}]")
