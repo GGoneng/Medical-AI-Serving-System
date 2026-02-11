@@ -8,7 +8,7 @@ model:
 
 dataset:
   dataset_path: snuh/ClinicalQA
-  num_calibration_samples: 256
+  num_calibration_samples: 128
   max_sequence_length: 4096
 
 
