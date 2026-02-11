@@ -49,15 +49,17 @@ recipe = [
 ]
 
 # Model 불러오기
-model = AutoModelForCausalLM.from_pretrained(MODEL_NAME)
+model = AutoModelForCausalLM.from_pretrained(MODEL_NAME,
+                                             dtype="auto",
+                                             device_map="auto")
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 
 # Dataset 불러오기
 data = load_dataset(DATASET_PATH, name=None, split=f"train[:{NUM_CALIBRATION_SAMPLES}]")
 data = data.shuffle(seed=SEED)
 
+# Dataset 전처리
 preprocess = build_preprocess(tokenizer)
-
 data = data.map(preprocess)
 
 # Log 출력
@@ -73,6 +75,7 @@ oneshot(
     num_calibration_samples=NUM_CALIBRATION_SAMPLES
 )
 
+# Test용 예시
 prompt = '''
 ### Instruction:
 당신은 임상 지식을 갖춘 유능하고 신뢰할 수 있는 한국어 기반 의료 어시스턴트입니다.
@@ -97,7 +100,7 @@ text = tokenizer.apply_chat_template(
     enable_thinking=True
 )
 
-# Confirm generations of the quantized model look sane.
+# Quantization Model 테스트
 print("\n\n")
 print("========== SAMPLE GENERATION ==============")
 
