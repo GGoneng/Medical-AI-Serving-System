@@ -82,9 +82,9 @@ The system aims to enhance diagnostic accuracy, reduce the workload of clinician
 
 <br><br>
 ## 🚀 Future Work
-- Improve image segmentation performance for pediatric abdominal X-rays by incorporating insights from recent research and state-of-the-art methods.  
+- Improve image segmentation performance for pediatric abdominal X-rays by incorporating insights from recent research and state-of-the-art methods. (Done)
 - Expand the number of vision models to support a wider range of diagnostic tasks and improve clinical applicability.  
-- Apply quantization to the hari-q3 model to optimize it for the available server resources.  
+- Apply quantization to the hari-q3 model to optimize it for the available server resources. (Done)
 - If high-quality and sufficient datasets are available, consider fine-tuning the model to further enhance diagnostic accuracy.  
 - Evaluate the current vLLM implementation within LangChain for production readiness, and if necessary, deploy a separate vLLM server for robust serving in real-world environments.  
 - Deploy the system on AWS to enable scalable and reliable service operation.
