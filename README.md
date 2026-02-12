@@ -37,9 +37,9 @@ The system aims to enhance diagnostic accuracy, reduce the workload of clinician
 
 <br><br>
 - ### **Large Language Model**
-  - **snuh/hari-q3-14b**
-    - This model is a Korean medical language model developed by Seoul National University Hospital. It has demonstrated strong performance, achieving 84.14% accuracy on the Korean Medical Licensing Examination (KMLE). We use this model to assist with diagnostic inference in a prototype system, utilizing LangChain templates and vLLM for initial deployment.
-    - Future updates will focus on optimizing model serving for production environments.
+  - **snuh/hari-q3-8b**
+    - This model is a Korean medical language model developed by Seoul National University Hospital. It has demonstrated strong performance, achieving 76.78% accuracy on the Korean Medical Licensing Examination (KMLE). We use this model to assist with diagnostic inference in a prototype system, utilizing LangChain templates and vLLM for initial deployment.
+    - To optimize inference speed and GPU memory usage for deployment, the model was quantized using AWQ.
   - If high-quality datasets become available, future work may include fine-tuning the model to further improve performance.
 
 <br><br>
@@ -52,7 +52,7 @@ The system aims to enhance diagnostic accuracy, reduce the workload of clinician
 | Framework       | PyTorch, FastAPI, React     |
 | Environment     | Jupyter Notebook / VSCode             |
 | Database        | Redis                               |
-| Hardware        | NVIDIA RTX 4090, NVIDIA RTX 4060                      |
+| Hardware        | NVIDIA RTX 4090, NVIDIA RTX 4060, A100 PCle     |
 
 
 <br><br>
