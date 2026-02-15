@@ -15,7 +15,10 @@ dataset:
 modifier_parameters:
   ignore: 
     - re:.*embed_tokens
+    - re:.*input_layernorm$
     - re:.*mlp[.]gate$
+    - re:.*post_attention_layernorm$
+    - re:.*norm$
     - lm_head
   scheme: W4A16
   targets:
